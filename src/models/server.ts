@@ -1,6 +1,7 @@
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import routesIncomes from "../routes/income";
+import routesExpenses from "../routes/expense";
 import db from "../db/connection";
 
 class Server {
@@ -31,6 +32,7 @@ class Server {
         });
 
         this.app.use('/api/incomes', routesIncomes);
+        this.app.use('/api/expenses', routesExpenses);
     }
 
     middleware() {

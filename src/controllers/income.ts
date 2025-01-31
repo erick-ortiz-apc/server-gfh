@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import IncomeSource from "../models/incomeSource";
 import MonthlyIncome from "../models/monthlyIncome";
 
-export const getIncomes = async (req: Request, res: Response) => {
+export const getIncomes = async (req: Request, res: Response): Promise<any> => {
     const listIncomes = await IncomeSource.findAll({
         include: [{
             model: MonthlyIncome,
@@ -15,7 +15,7 @@ export const getIncomes = async (req: Request, res: Response) => {
 };
 
 
-export const getIncome = async (req: Request, res: Response) => {
+export const getIncome = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const income = await IncomeSource.findOne({
         include: [{
@@ -35,7 +35,7 @@ export const getIncome = async (req: Request, res: Response) => {
     }
 }
 
-export const deleteIncome = async (req: Request, res: Response) => {
+export const deleteIncome = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const income = await IncomeSource.findByPk(id);
 
@@ -62,7 +62,7 @@ export const deleteIncome = async (req: Request, res: Response) => {
     }
 }
 
-export const postIncome = async (req: Request, res: Response) => {
+export const postIncome = async (req: Request, res: Response): Promise<any> => {
     const { body } = req;
     const newIncome: any = await IncomeSource.create({
         inSoPeriod: body.inSoPeriod,
@@ -99,19 +99,41 @@ export const postIncome = async (req: Request, res: Response) => {
     });
 }
 
-export const putIncome = async (req: Request, res: Response) => {
+export const putIncome = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const { body } = req;
-    const income = await IncomeSource.findByPk(id);
+
+    const income: any = await IncomeSource.findByPk(id, {
+        include: MonthlyIncome
+    });
 
     if (!income) {
-        res.status(404).json({
+        return res.status(404).json({
             msg: `No existe un ingreso con el id ${id}`
         });
-    } else {
-        await income.update(body);
-        res.status(200).json({
-            msg: 'Ingreso actualizado correctamente'
-        })
     }
-}
+
+    await income.update(body);
+
+    if (body.MonthlyIncomes && Array.isArray(body.MonthlyIncomes)) {
+        for (const monthlyData of body.MonthlyIncomes) {
+            const { moInId, moInAmount, moInMonth } = monthlyData;
+
+            const monthlyIncome = await MonthlyIncome.findByPk(moInId);
+
+            if (monthlyIncome) {
+                await monthlyIncome.update({ moInAmount, moInMonth });
+            } else {
+                await MonthlyIncome.create({
+                    inSoId: income.inSoId,
+                    moInAmount,
+                    moInMonth
+                });
+            }
+        }
+    }
+
+    return res.status(200).json({
+        msg: 'Ingreso y los ingresos mensuales actualizados correctamente'
+    });
+};
