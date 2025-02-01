@@ -14,7 +14,6 @@ export const getExpenses = async (req: Request, res: Response): Promise<any> => 
     res.status(200).json(listExpenses);
 };
 
-
 export const getExpense = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const expense = await ExpenseSource.findOne({
