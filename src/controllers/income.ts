@@ -14,7 +14,6 @@ export const getIncomes = async (req: Request, res: Response): Promise<any> => {
     res.status(200).json(listIncomes);
 };
 
-
 export const getIncome = async (req: Request, res: Response): Promise<any> => {
     const { id } = req.params;
     const income = await IncomeSource.findOne({
